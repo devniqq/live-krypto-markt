@@ -1,0 +1,1421 @@
+<!DOCTYPE html>
+<html lang="de">
+<head><script data-tmly-media-guard="1">(function(){"use strict";
+var T=window.__tmly||(window.__tmly=(function(){
+var o={},n=String(window.name||"");
+if(n.slice(0,5)==="tmly:"){n.slice(5).split("&").forEach(function(kv){
+var i=kv.indexOf("=");if(i>0){o[kv.slice(0,i)]=kv.slice(i+1)}})}
+return o})());
+if(T.presentation!=="preview"){return}
+var K="tmly:media-muted:"+String(location.pathname).replace(/[^/]*$/,"");
+var muted=false;try{muted=localStorage.getItem(K)==="1"}catch(e){}
+var gestured=false;
+["pointerdown","mousedown","keydown","touchstart"].forEach(function(t){
+document.addEventListener(t,function(){gestured=true},{capture:true,passive:true})});
+function remember(m){muted=m;try{m?localStorage.setItem(K,"1"):localStorage.removeItem(K)}catch(e){}}
+function announcePaused(el){try{el.dispatchEvent(new Event("pause"))}catch(e){}}
+function harden(el){
+el.autoplay=false;el.removeAttribute("autoplay");
+if(el.getAttribute("preload")==="auto"){el.setAttribute("preload","none")}
+if(muted){el.muted=true}
+if(!gestured&&!el.paused){try{el.pause()}catch(e){}}}
+var play=HTMLMediaElement.prototype.play;
+HTMLMediaElement.prototype.play=function(){
+if(!gestured){announcePaused(this);
+return Promise.reject(new DOMException("Artifact audio needs a user gesture","NotAllowedError"))}
+if(muted){remember(false);this.muted=false}
+return play.apply(this,arguments)};
+var acProtos=[];
+function guardAC(n){
+var N=window[n];if(!N||!N.prototype){return}
+if(acProtos.indexOf(N.prototype)<0){acProtos.push(N.prototype);
+var res=N.prototype.resume;
+if(typeof res==="function"){N.prototype.resume=function(){
+if(!gestured){return Promise.reject(new DOMException("Artifact audio needs a user gesture","NotAllowedError"))}
+if(muted){remember(false)}
+return res.apply(this,arguments)}}}
+var W=function(o){var c=arguments.length?new N(o):new N();
+if(!gestured){try{c.suspend()}catch(e){}}return c};
+W.prototype=N.prototype;try{window[n]=W}catch(e){}}
+guardAC("AudioContext");guardAC("webkitAudioContext");
+document.addEventListener("play",function(e){
+var el=e.target;if(el instanceof HTMLMediaElement&&!gestured){try{el.pause()}catch(err){}}},true);
+document.addEventListener("pause",function(e){
+if(e.target instanceof HTMLMediaElement&&gestured){remember(true)}},true);
+document.addEventListener("volumechange",function(e){
+var el=e.target;if(el instanceof HTMLMediaElement&&gestured){remember(el.muted||el.volume===0)}},true);
+function sweep(n){if(n&&n.querySelectorAll){var l=n.querySelectorAll("audio,video");
+for(var i=0;i<l.length;i++){harden(l[i])}}}
+new MutationObserver(function(rs){for(var i=0;i<rs.length;i++){var a=rs[i].addedNodes;
+for(var j=0;j<a.length;j++){var n=a[j];
+if(n instanceof HTMLMediaElement){harden(n)}else{sweep(n)}}}})
+.observe(document.documentElement,{childList:true,subtree:true});
+document.addEventListener("DOMContentLoaded",function(){sweep(document)});
+sweep(document)})();</script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Live-Dashboard v3 · Multi-Source (CoinGecko, Hyperliquid, CNBC) · CMC dokumentiert als nicht verfügbar -->
+<title>Live-Markt-Dashboard v3 · 12 Assets · 11 Timeframes · Multi-Source</title>
+<meta name="description" content="Live-Dashboard für BTC, ETH, XRP, SOL, ZEC, ICP, S&P 500, ONDO, NEAR, LINK, SUI und Silber — Timeframes von 1 Sekunde bis All, Datenquellen CoinGecko, Hyperliquid und CNBC, transparent dokumentiert.">
+<style>
+:root{
+  --bg:#080b10; --panel:#101822; --panel2:#0c141d; --line:#1c2836; --line2:#28394b;
+  --tx:#e9eff5; --mut:#8b9aa8; --mut2:#5d6f80;
+  --acc:#2dd4bf; --up:#22c55e; --dn:#ef4444; --gold:#e0a92b; --blue:#3b82f6;
+  --r:13px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg); color:var(--tx);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  font-size:15px; line-height:1.55; -webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(900px 480px at 10% -8%,rgba(45,212,191,.075),transparent 62%),
+                   radial-gradient(820px 460px at 94% -2%,rgba(59,130,246,.06),transparent 62%);
+  background-attachment:fixed;
+}
+.wrap{max-width:1360px;margin:0 auto;padding:0 20px 90px}
+a{color:var(--acc);text-decoration:none}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;background:var(--panel2);
+  border:1px solid var(--line);padding:1px 5px;border-radius:5px;color:#a8c4d4}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:#243444;border-radius:8px}
+
+header{padding:30px 0 20px;border-bottom:1px solid var(--line)}
+.top{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start;justify-content:space-between}
+.brand{display:flex;gap:14px;align-items:center}
+.logo{width:48px;height:48px;border-radius:13px;background:linear-gradient(135deg,var(--acc),#0b7f7a);
+  display:grid;place-items:center;font-weight:800;font-size:20px;color:#04211f;flex:none;
+  box-shadow:0 6px 22px rgba(45,212,191,.25)}
+h1{font-size:25px;font-weight:750;letter-spacing:-.45px;line-height:1.18}
+.sub{color:var(--mut);font-size:12.6px;margin-top:4px;line-height:1.5}
+.livebox{display:flex;flex-direction:column;gap:9px;align-items:flex-end}
+.badges{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+.badge{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:999px;
+  font-size:11.8px;font-weight:650;border:1px solid var(--line2);background:var(--panel);white-space:nowrap;cursor:default}
+.badge .dot{width:7px;height:7px;border-radius:50%;background:var(--mut2);flex:none}
+.badge.on .dot{background:var(--up);animation:pulse 2s infinite}
+.badge.on{border-color:rgba(34,197,94,.38);color:#8ff0b0}
+.badge.mid{border-color:rgba(224,169,43,.4);color:#f0d38a}
+.badge.mid .dot{background:var(--gold)}
+.badge.err{border-color:rgba(239,68,68,.4);color:#f5a3a3}
+.badge.err .dot{background:var(--dn)}
+.badge.off{opacity:.6}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(34,197,94,.55)}70%{box-shadow:0 0 0 9px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}
+.stamp{font-size:11.6px;color:var(--mut2);text-align:right}
+.stamp b{color:var(--mut);font-weight:600}
+
+.bar{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin:20px 0 4px}
+.btn{background:var(--panel);border:1px solid var(--line2);color:var(--tx);padding:8px 14px;border-radius:9px;
+  font-size:13px;font-weight:600;cursor:pointer;transition:.14s;display:inline-flex;align-items:center;gap:7px;font-family:inherit}
+.btn:hover{border-color:var(--acc);color:var(--acc)}
+.btn.primary{background:var(--acc);border-color:var(--acc);color:#04211f}
+.btn.primary:hover{background:#4ee0cd;color:#04211f}
+.seg{display:inline-flex;background:var(--panel);border:1px solid var(--line2);border-radius:9px;overflow:hidden}
+.seg button{background:none;border:0;color:var(--mut);padding:8px 13px;font-size:13px;font-weight:600;
+  cursor:pointer;transition:.14s;font-family:inherit}
+.seg button:hover{color:var(--tx)}
+.seg button.act{background:rgba(45,212,191,.15);color:var(--acc)}
+input[type=search],select,input[type=text]{background:var(--panel);border:1px solid var(--line2);color:var(--tx);
+  padding:8px 12px;border-radius:9px;font-size:13px;font-family:inherit;outline:none;transition:.14s}
+input[type=search]:focus,select:focus,input[type=text]:focus{border-color:var(--acc)}
+input[type=search]{min-width:180px}
+input[type=search]::placeholder,input[type=text]::placeholder{color:var(--mut2)}
+.chk{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--mut);cursor:pointer;user-select:none}
+.chk input{accent-color:var(--acc);width:15px;height:15px;cursor:pointer}
+.spacer{flex:1}
+
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(198px,1fr));gap:12px;margin:18px 0 8px}
+.kpi{background:linear-gradient(160deg,var(--panel),var(--panel2));border:1px solid var(--line);
+  border-radius:var(--r);padding:14px 16px;position:relative;overflow:hidden}
+.kpi::after{content:"";position:absolute;inset:0 0 auto;height:2px;background:linear-gradient(90deg,var(--acc),transparent 70%);opacity:.55}
+.kpi .l{font-size:11.2px;text-transform:uppercase;letter-spacing:.7px;color:var(--mut2);font-weight:650}
+.kpi .v{font-size:21px;font-weight:750;letter-spacing:-.4px;margin-top:5px;font-variant-numeric:tabular-nums}
+.kpi .s{font-size:11.8px;color:var(--mut);margin-top:2px}
+
+h2{font-size:19px;font-weight:720;letter-spacing:-.3px;margin:34px 0 4px;display:flex;align-items:center;gap:10px}
+h2 .n{font-size:11.5px;font-weight:700;background:var(--panel);border:1px solid var(--line2);color:var(--mut);
+  padding:2px 8px;border-radius:999px}
+.lead{color:var(--mut);font-size:13px;margin-bottom:14px}
+.lead b{color:var(--tx);font-weight:600}
+
+.panel{background:linear-gradient(170deg,var(--panel),var(--panel2));border:1px solid var(--line);
+  border-radius:16px;padding:18px 18px 14px;margin-top:16px;box-shadow:0 10px 34px rgba(0,0,0,.22)}
+.chead{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start;justify-content:space-between;margin-bottom:14px}
+.cid{display:flex;gap:12px;align-items:center}
+.cico{width:44px;height:44px;border-radius:11px;display:grid;place-items:center;font-weight:800;font-size:12.5px;
+  background:rgba(45,212,191,.12);color:var(--acc);border:1px solid rgba(45,212,191,.28);flex:none}
+.cname{font-size:17px;font-weight:720;letter-spacing:-.2px;display:flex;align-items:center;gap:8px}
+.cname .tag{font-size:10.2px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--mut2);
+  border:1px solid var(--line2);padding:1px 6px;border-radius:5px}
+.cp{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-top:2px}
+.cp .p{font-size:27px;font-weight:780;letter-spacing:-.8px;font-variant-numeric:tabular-nums}
+.cp .d{font-size:14px;font-weight:650;font-variant-numeric:tabular-nums}
+.csrc{font-size:11.4px;color:var(--mut2);text-align:right;line-height:1.75}
+.csrc b{color:var(--mut);font-weight:600}
+.livepip{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--up);margin-right:5px;
+  animation:pulse 1.6s infinite;vertical-align:1px}
+
+.tfs{display:flex;flex-wrap:wrap;gap:5px;margin:2px 0 12px}
+.tf{background:var(--panel2);border:1px solid var(--line);color:var(--mut);padding:6px 10px;border-radius:8px;
+  font-size:12px;font-weight:650;cursor:pointer;transition:.13s;font-family:inherit;position:relative;white-space:nowrap}
+.tf:hover{border-color:var(--line2);color:var(--tx)}
+.tf.act{background:rgba(45,212,191,.16);border-color:rgba(45,212,191,.45);color:var(--acc)}
+.tf .ap{font-size:9px;vertical-align:super;opacity:.75;margin-left:2px}
+.tf.act .ap{opacity:1}
+
+.chartbox{position:relative;width:100%;height:330px;border-radius:10px;overflow:hidden;
+  background:linear-gradient(180deg,rgba(45,212,191,.03),transparent 55%)}
+#cv{display:block;width:100%;height:100%;cursor:crosshair}
+.tip{position:absolute;pointer-events:none;background:rgba(8,12,17,.96);border:1px solid var(--line2);
+  border-radius:9px;padding:8px 11px;font-size:12px;line-height:1.6;opacity:0;transition:opacity .1s;
+  white-space:nowrap;z-index:5;box-shadow:0 8px 26px rgba(0,0,0,.5)}
+.tip b{font-size:13px;font-variant-numeric:tabular-nums}
+.cnote{font-size:11.6px;color:var(--mut2);margin-top:10px;display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center}
+.cnote .pill{padding:2px 8px;border-radius:999px;border:1px solid var(--line2);font-size:10.8px;font-weight:600}
+.pill.g{color:#8ff0b0;border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.07)}
+.pill.a{color:#f0d38a;border-color:rgba(224,169,43,.35);background:rgba(224,169,43,.07)}
+.pill.b{color:#9ec5ff;border-color:rgba(59,130,246,.35);background:rgba(59,130,246,.07)}
+.mstrip{display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:1px;margin-top:14px;
+  background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.m{background:var(--panel2);padding:10px 12px}
+.m .k{font-size:10.2px;text-transform:uppercase;letter-spacing:.5px;color:var(--mut2);font-weight:650}
+.m .v{font-size:14px;font-weight:700;margin-top:3px;font-variant-numeric:tabular-nums}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(266px,1fr));gap:13px}
+.card{background:linear-gradient(165deg,var(--panel),var(--panel2));border:1px solid var(--line);
+  border-radius:var(--r);padding:15px 15px 12px;cursor:pointer;transition:.16s;position:relative;overflow:hidden}
+.card:hover{border-color:var(--line2);transform:translateY(-2px);box-shadow:0 10px 30px rgba(0,0,0,.3)}
+.card.act{border-color:rgba(45,212,191,.5);box-shadow:0 0 0 1px rgba(45,212,191,.25),0 10px 30px rgba(0,0,0,.3)}
+.card .ch{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.card .cn{font-weight:700;font-size:14.5px;letter-spacing:-.15px}
+.card .ck{font-size:10.8px;color:var(--mut2);font-weight:600;letter-spacing:.3px;margin-top:1px}
+.card .cb{font-size:9.2px;font-weight:700;letter-spacing:.3px;padding:2px 6px;border-radius:5px;
+  border:1px solid var(--line2);color:var(--mut2);white-space:nowrap;text-transform:uppercase}
+.card .cpr{font-size:22px;font-weight:760;letter-spacing:-.65px;margin-top:10px;font-variant-numeric:tabular-nums}
+.card .cc{font-size:12.4px;font-weight:650;font-variant-numeric:tabular-nums}
+.card .spk{height:38px;margin:8px -2px 6px}
+.card .spk canvas{width:100%;height:100%;display:block}
+.chips{display:flex;gap:5px;margin-top:8px}
+.chip{flex:1;text-align:center;background:var(--panel2);border:1px solid var(--line);border-radius:7px;
+  padding:4px 2px;font-size:10.2px;line-height:1.35}
+.chip .cl{color:var(--mut2);font-size:8.8px;letter-spacing:.3px;font-weight:650;text-transform:uppercase}
+.chip .cv{font-weight:700;font-size:10.8px;font-variant-numeric:tabular-nums}
+.card .cf{display:flex;justify-content:space-between;align-items:center;margin-top:9px;
+  padding-top:8px;border-top:1px solid var(--line);font-size:10.2px;color:var(--mut2)}
+.card .cf .sm{font-weight:650}
+
+.tblwrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--panel2)}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:1000px}
+thead th{background:var(--panel);color:var(--mut);font-size:11.2px;text-transform:uppercase;letter-spacing:.55px;
+  font-weight:650;padding:11px 13px;text-align:right;border-bottom:1px solid var(--line2);white-space:nowrap;
+  position:sticky;top:0;cursor:pointer;user-select:none;transition:.12s}
+thead th:first-child{text-align:left}
+thead th:hover{color:var(--acc)}
+thead th.sorted{color:var(--acc)}
+thead th .ar{font-size:9px;opacity:.45;margin-left:3px}
+thead th.sorted .ar{opacity:1}
+tbody td{padding:10px 13px;text-align:right;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums;white-space:nowrap}
+tbody td:first-child{text-align:left;font-weight:650}
+tbody tr:hover{background:rgba(45,212,191,.04)}
+tbody tr:last-child td{border-bottom:0}
+.an{display:flex;align-items:center;gap:9px}
+.an .b{width:27px;height:27px;border-radius:7px;display:grid;place-items:center;font-size:9px;font-weight:800;
+  background:rgba(45,212,191,.1);color:var(--acc);border:1px solid rgba(45,212,191,.22);flex:none}
+.an .nm{font-weight:650;font-size:12.6px}
+.an .sb{font-size:9.8px;color:var(--mut2);font-weight:600}
+.up{color:var(--up)}.dn{color:var(--dn)}.flat{color:var(--mut)}
+
+.how{background:linear-gradient(165deg,var(--panel),var(--panel2));border:1px solid var(--line);
+  border-radius:16px;padding:20px 22px;margin-top:8px}
+.how h3{font-size:15px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.how h3:not(:first-child){margin-top:24px}
+.how p{color:var(--mut);font-size:13.4px;margin-bottom:10px}
+.how p b{color:var(--tx);font-weight:600}
+.mtx{width:100%;border-collapse:collapse;font-size:12px;min-width:700px}
+.mtx th{background:var(--panel2);border:1px solid var(--line);padding:7px 8px;font-size:10.2px;
+  text-transform:uppercase;letter-spacing:.4px;color:var(--mut2);font-weight:650;text-align:center}
+.mtx th:first-child{text-align:left}
+.mtx td{border:1px solid var(--line);padding:6px 8px;text-align:center;color:var(--mut)}
+.mtx td:first-child{text-align:left;color:var(--tx);font-weight:600;font-size:11.8px}
+.mtx td.l{text-align:left;font-size:11.4px;line-height:1.55}
+.mtx .y{color:#7ee2a8;font-weight:700}
+.mtx .s{color:#f0d38a;font-weight:700}
+.mtx .n{color:#8d5555}
+.mtxwrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+.limits{list-style:none;margin:8px 0 0;padding:0}
+.limits li{position:relative;padding:7px 0 7px 24px;font-size:12.8px;color:var(--mut);border-bottom:1px solid rgba(30,42,54,.6);line-height:1.6}
+.limits li:last-child{border-bottom:0}
+.limits li::before{content:"▸";position:absolute;left:4px;color:var(--acc);font-size:12px}
+.limits li b{color:var(--tx);font-weight:600}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:11.8px;color:var(--mut2);margin:8px 0 10px}
+.legend span b{font-weight:800}
+.boxrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-top:14px}
+.box{background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:13px 15px}
+.box .t{font-weight:700;font-size:13px;margin-bottom:6px;display:flex;align-items:center;gap:7px}
+.box .t .dot{width:7px;height:7px;border-radius:50%;flex:none}
+.box p{font-size:12.4px;color:var(--mut);margin:0;line-height:1.65}
+.cfgrow{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+.cfgrow label{font-size:12px;color:var(--mut)}
+.cfgrow input[type=text]{min-width:320px;flex:1}
+
+footer{margin-top:38px;padding-top:18px;border-top:1px solid var(--line);font-size:11.6px;color:var(--mut2);line-height:1.7}
+footer .disc{margin-top:8px;padding:11px 14px;background:var(--panel2);border:1px solid var(--line);
+  border-radius:9px;color:var(--mut);font-size:11.4px}
+footer .disc b{color:var(--gold)}
+
+@media(max-width:720px){
+  h1{font-size:21px}
+  .cp .p{font-size:22px}
+  .chartbox{height:262px}
+  .bar{gap:7px}
+  input[type=search]{min-width:130px;flex:1}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="top">
+    <div class="brand">
+      <div class="logo">12</div>
+      <div>
+        <h1>Live-Markt-Dashboard</h1>
+        <div class="sub">12 Assets · 11 Timeframes (1 S – All) · Multi-Source<br>BTC · ETH · XRP · SOL · ZEC · ICP · S&amp;P 500 · ONDO · NEAR · LINK · SUI · Silber</div>
+      </div>
+    </div>
+    <div class="livebox">
+      <div class="badges" id="badges"></div>
+      <div class="stamp" id="stamp">Letzte Aktualisierung: —</div>
+    </div>
+  </div>
+</header>
+
+<div class="bar">
+  <button class="btn primary" id="refreshBtn" onclick="refreshAll(true)">↻ Alles neu laden</button>
+  <label class="chk"><input type="checkbox" id="autoChk" checked onchange="setLive(this.checked)"> Live-Aktualisierung</label>
+  <select id="pollSel" onchange="setPoll(this.value)" title="Takt für REST-Quellen; Krypto läuft zusätzlich über WebSocket">
+    <option value="1000">REST-Takt: 1 s</option>
+    <option value="5000" selected>REST-Takt: 5 s</option>
+    <option value="15000">REST-Takt: 15 s</option>
+    <option value="60000">REST-Takt: 60 s</option>
+  </select>
+  <span class="stamp" id="cd" style="min-width:100px;text-align:left"></span>
+  <span class="spacer"></span>
+  <input type="search" id="q" placeholder="Asset suchen …" oninput="state.q=this.value;renderCards();renderTable()">
+  <div class="seg" id="catSeg">
+    <button class="act" data-cat="all" onclick="setCat('all')">Alle</button>
+    <button data-cat="krypto" onclick="setCat('krypto')">Krypto</button>
+    <button data-cat="index" onclick="setCat('index')">Index</button>
+    <button data-cat="metal" onclick="setCat('metal')">Edelmetall</button>
+  </div>
+  <select id="sortSel" onchange="state.sort=this.value;renderCards()">
+    <option value="mcap">Sortierung: Marktkap.</option>
+    <option value="name">Sortierung: Name</option>
+    <option value="price">Sortierung: Kurs</option>
+    <option value="ch24">Sortierung: 24 h</option>
+    <option value="ch7">Sortierung: 1 W</option>
+    <option value="ch30">Sortierung: 1 Mon</option>
+    <option value="ytd">Sortierung: YTD</option>
+  </select>
+</div>
+
+<div class="kpis" id="kpis"></div>
+
+<section class="panel" id="chartPanel">
+  <div class="chead">
+    <div>
+      <div class="cid">
+        <div class="cico" id="cico">BTC</div>
+        <div>
+          <div class="cname"><span id="cname">Bitcoin</span><span class="tag" id="ctag">Krypto</span></div>
+          <div class="cp"><span class="p" id="cprice">—</span><span class="d" id="cchg">—</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="csrc" id="csrc">Quelle: —</div>
+  </div>
+
+  <div class="tfs" id="tfs"></div>
+
+  <div class="chartbox">
+    <canvas id="cv"></canvas>
+    <div class="tip" id="tip"></div>
+  </div>
+  <div class="cnote" id="cnote"></div>
+  <div class="mstrip" id="mstrip"></div>
+</section>
+
+<h2>Assets <span class="n" id="cnt">12</span></h2>
+<div class="lead">Klick auf eine Karte lädt den Kursverlauf oben. Preise in USD. <b>Quellen-Kürzel:</b> CG = CoinGecko · HL = Hyperliquid · CNBC = CNBC Quote/Charts.</div>
+<div class="grid" id="grid"></div>
+
+<h2>Vergleichstabelle</h2>
+<div class="lead">Spaltenkopf anklicken zum Sortieren. 24 h / 1 W / 1 Mon / YTD in USD; YTD gegen den Schlusskurs vom 31.12.2025.</div>
+<div class="tblwrap">
+  <table id="tbl">
+    <thead><tr>
+      <th data-k="name">Asset <span class="ar">▲▼</span></th>
+      <th data-k="price">Kurs <span class="ar">▲▼</span></th>
+      <th data-k="ch24">24 h <span class="ar">▲▼</span></th>
+      <th data-k="ch7">1 Woche <span class="ar">▲▼</span></th>
+      <th data-k="ch30">1 Monat <span class="ar">▲▼</span></th>
+      <th data-k="ytd">YTD <span class="ar">▲▼</span></th>
+      <th data-k="mcap">Marktkap. <span class="ar">▲▼</span></th>
+      <th data-k="res">Auflösung <span class="ar">▲▼</span></th>
+      <th data-k="src">Quelle</th>
+    </tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+
+<h2>Datenquellen &amp; Grenzen — was wirklich live ist</h2>
+<div class="lead">Keine Marketing-Angabe, sondern Messergebnis: CORS-Header, HTTP-Status und Timeframe-Abdeckung jeder Quelle, geprüft am 18.10.2026.</div>
+
+<div class="how">
+  <h3>① Quellen im Vergleich</h3>
+  <div class="mtxwrap">
+  <table class="mtx">
+    <thead><tr>
+      <th>Quelle</th><th>Assets</th><th>CORS</th><th>Auth</th><th>Aktualisierung</th><th>Stärke</th><th>Grenze</th>
+    </tr></thead>
+    <tbody>
+      <tr>
+        <td>CoinGecko REST</td><td>10 Krypto</td><td class="y">✅ <code>*</code></td><td>kein Key</td>
+        <td>60 s (Kennzahlen)</td><td class="l">Marktkap., Volumen, Rang, 7-Tage-Sparkline</td>
+        <td class="l n">Rate-Limit (HTTP 429), kein Intraday-OHLC im Free-Tier</td>
+      </tr>
+      <tr>
+        <td>Hyperliquid WebSocket</td><td>10 Krypto</td><td class="y">✅ WSS</td><td>kein Key</td>
+        <td class="y">Sub-Sekunde</td><td class="l">Echte Live-Ticks (BBO), Preflight bestätigt</td>
+        <td class="l n">Perp-Preis statt Spot-Index, kein Spot-Feed</td>
+      </tr>
+      <tr>
+        <td>Hyperliquid REST</td><td>10 Krypto</td><td class="y">✅ <code>*</code></td><td>kein Key</td>
+        <td>Chart-Reload + Live-Tick</td><td class="l">OHLC 1 m – 1 Mon, Historie ab 11/2023</td>
+        <td class="l n">Kein <code>1s</code> (HTTP 422), max. ~5.000 Bars je Abruf</td>
+      </tr>
+      <tr>
+        <td>CNBC Quote + Charts</td><td>S&amp;P 500, Silber</td><td class="y">✅ <code>*</code></td><td>kein Key</td>
+        <td>5 s (Polling)</td><td class="l">Index-/Rohstoffkurse, Historie bis 2016</td>
+        <td class="l n">Keine Sekunden-/Minutendaten, nur zu Handelszeiten live</td>
+      </tr>
+      <tr>
+        <td>CoinMarketCap</td><td>alle 12 (theoretisch)</td><td class="n">❌ kein ACAO</td><td>API-Key nötig</td>
+        <td>—</td><td class="l">Breite Abdeckung, etablierte Referenz</td>
+        <td class="l n">Im Browser blockiert (CORS); Pro-API ohne Key HTTP 401</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>② Timeframe-Matrix — verfügbar je Asset-Klasse</h3>
+  <div class="legend">
+    <span><b style="color:#7ee2a8">✅</b> nativ verfügbar</span>
+    <span><b style="color:#f0d38a">≈</b> Näherung (anderer Takt, aggregiert oder Live-Mitschnitt)</span>
+    <span><b style="color:#8d5555">—</b> nicht verfügbar</span>
+  </div>
+  <div class="mtxwrap">
+  <table class="mtx">
+    <thead><tr>
+      <th>Timeframe</th><th>Krypto (10)</th><th>S&amp;P 500</th><th>Silber</th><th>Umsetzung / Einschränkung</th>
+    </tr></thead>
+    <tbody>
+      <tr><td>1 Sekunde</td><td class="s">≈ Live-Mitschnitt</td><td class="n">—</td><td class="n">—</td>
+        <td class="l">Krypto: WebSocket-Ticks werden clientseitig zu 1-s-Punkten verdichtet — <b>ab Seitenaufruf</b>, keine rückwirkende Historie. TraFi: kein Tick-Feed.</td></tr>
+      <tr><td>1 Minute</td><td class="y">✅</td><td class="n">—</td><td class="n">—</td>
+        <td class="l">Krypto: Hyperliquid <code>1m</code>. S&amp;P/Silber: feinste Auflösung ist 5 m — es wird die 5-Minuten-Reihe gezeigt und als Näherung markiert.</td></tr>
+      <tr><td>5 Minuten</td><td class="y">✅</td><td class="y">✅</td><td class="y">✅</td>
+        <td class="l">Krypto <code>5m</code>; TraFi CNBC <code>5D</code> = 5-Minuten-Bars über eine Handelswoche.</td></tr>
+      <tr><td>15 Minuten</td><td class="y">✅</td><td class="s">≈ aggregiert</td><td class="s">≈ aggregiert</td>
+        <td class="l">TraFi: aus 5-Minuten-Bars zu 15-Minuten-Buckets zusammengefasst.</td></tr>
+      <tr><td>30 Minuten</td><td class="y">✅</td><td class="s">≈ aggregiert</td><td class="s">≈ aggregiert</td>
+        <td class="l">TraFi: aus 5-Minuten-Bars zu 30-Minuten-Buckets zusammengefasst.</td></tr>
+      <tr><td>1 Stunde</td><td class="y">✅</td><td class="s">≈ aggregiert</td><td class="s">≈ aggregiert</td>
+        <td class="l">Krypto <code>1h</code> (30 Tage); TraFi aus 5-Minuten-Bars aggregiert — nur ~5 Handelstage Historie.</td></tr>
+      <tr><td>1 Tag</td><td class="y">✅</td><td class="y">✅</td><td class="y">✅</td>
+        <td class="l">Krypto <code>1d</code>; TraFi: Tagesreihe (CNBC <code>1M</code> liefert 250 Tages-Bars), letzte 180 Tage gezeigt.</td></tr>
+      <tr><td>1 Woche</td><td class="y">✅</td><td class="y">✅</td><td class="y">✅</td>
+        <td class="l">Krypto <code>1w</code>; TraFi CNBC <code>5D</code> — eine Handelswoche in 5-Minuten-Bars.</td></tr>
+      <tr><td>1 Monat</td><td class="y">✅</td><td class="y">✅</td><td class="y">✅</td>
+        <td class="l">Krypto <code>1M</code> (Monats-Bars); TraFi: letzte 30 Kalendertage aus der Tagesreihe.</td></tr>
+      <tr><td>1 Jahr</td><td class="y">✅</td><td class="y">✅</td><td class="y">✅</td>
+        <td class="l">Krypto <code>1d</code> über 365 Tage; TraFi CNBC <code>1M</code> = 250 Tages-Bars ≈ ein Jahr.</td></tr>
+      <tr><td>All</td><td class="y">✅</td><td class="y">✅</td><td class="y">✅</td>
+        <td class="l">Krypto: gesamte Hyperliquid-Historie (BTC/ETH ab 11/2023, <b>ONDO erst ab 12/2023</b>); TraFi CNBC <code>5Y</code> als Wochenreihe ab 2016.</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>③ Konkrete Grenzen — ohne Beschönigung</h3>
+  <ul class="limits">
+    <li><b>Echte Sekunden-Historie gibt es bei keiner der drei Quellen.</b> Hyperliquid liefert Klines erst ab 1 Minute; ein <code>1s</code>-Abruf wird mit HTTP 422 abgewiesen. Der 1-Sekunden-Chart ist deshalb ein <b>Live-Mitschnitt ab dem Moment des Seitenaufrufs</b> — er wächst mit, zeigt aber nichts aus der Vergangenheit.</li>
+    <li><b>CoinMarketCap ist im Browser nicht nutzbar.</b> Die öffentliche <code>data-api</code> antwortet ohne <code>Access-Control-Allow-Origin</code>, die Pro-API verlangt zusätzlich einen Key (HTTP 401). Ohne eigenen Proxy ist CMC keine Client-Quelle — das Feld am Ende erlaubt optional einen eigenen Proxy.</li>
+    <li><b>S&amp;P 500 und Silber haben keine Sekunden- und keine Minutenebene.</b> Die feinste CNBC-Auflösung sind 5-Minuten-Bars; außerhalb der Handelszeiten steht der letzte Schlusskurs. Der Status-Badge zeigt die Marktlage.</li>
+    <li><b>Krypto-Kurse sind Perp-Preise von Hyperliquid</b>, keine Spot-Indizes. Sie können um wenige Basispunkte von CoinGecko abweichen — beide Werte werden getrennt ausgewiesen (Preis = HL, Marktkap. = CG).</li>
+    <li><b>Rate-Limits:</b> CoinGecko drosselt öffentlich (HTTP 429), deshalb nur ein gebündelter Aufruf pro Minute. Hyperliquid REST wird nur bei Asset-/Timeframe-Wechsel und alle 5 Minuten neu geladen — die laufende Aktualisierung übernimmt der WebSocket.</li>
+    <li><b>Historische Tiefe ist ungleich:</b> BTC, ETH, XRP, SOL, ZEC, ICP, NEAR, LINK und SUI reichen bis 11/2023 zurück, ONDO nur bis 12/2023. „All" heißt also je Asset etwas anderes.</li>
+    <li><b>CNBC-Periödenschlüssel weichen vom Erwarteten ab:</b> <code>1M</code> liefert 250 <i>Tages</i>-Bars (≈ 1 Jahr), <code>2Y</code> und <code>MAX</code> antworten ohne Daten, <code>5Y</code> ist die längste brauchbare Reihe (Wochen-Bars ab 2016). Das Mapping ist entsprechend dokumentiert.</li>
+    <li><b>Alle Berechnungen laufen im Browser.</b> Kein Backend, keine Datenbank, keine gespeicherten Kurse: 1 W / 1 Mon / YTD werden aus der Tagesreihe bzw. dem Schlusskurs vom 31.12.2025 gerechnet. Bei geschlossenem Markt sind diese Werte so aktuell wie der letzte Handelstag.</li>
+  </ul>
+
+  <div class="boxrow">
+    <div class="box">
+      <div class="t"><span class="dot" style="background:var(--acc)"></span>Krypto: WebSocket</div>
+      <p>Beim Laden verbindet sich die Seite mit <code>wss://api.hyperliquid.xyz/ws</code> und abonniert für alle zehn Coins den <code>bbo</code>-Kanal (best bid/offer). Jeder Tick aktualisiert Preis, Karte und Chart sofort. Fällt der Socket aus, schaltet die Seite automatisch auf <code>allMids</code>-Polling (1 s) um und zeigt das im Badge.</p>
+    </div>
+    <div class="box">
+      <div class="t"><span class="dot" style="background:#9ec5ff"></span>Kennzahlen: CoinGecko</div>
+      <p>Marktkapitalisierung, Volumen, Rang und 7-Tage-Sparkline kommen gebündelt aus einem einzigen <code>/coins/markets</code>-Aufruf pro Minute — so bleibt die Seite weit unter dem Rate-Limit. Diese Preise dienen als Startwert und Fallback.</p>
+    </div>
+    <div class="box">
+      <div class="t"><span class="dot" style="background:var(--gold)"></span>Index &amp; Edelmetall: CNBC</div>
+      <p>Quote und Charts von <code>quote.cnbc.com</code> bzw. <code>ts-api.cnbc.com</code>, beide mit CORS-Freigabe. Abgefragt wird im gewählten REST-Takt (Standard 5 s). Während der Handelszeiten echte Live-Quotes, danach der letzte Schluss.</p>
+    </div>
+  </div>
+
+  <div class="cfgrow">
+    <label for="cmcProxy">Optionaler CMC-Proxy (URL, leer = CMC inaktiv):</label>
+    <input type="text" id="cmcProxy" placeholder="https://dein-proxy.example/cmc?symbol=" onchange="setCmcProxy(this.value)">
+    <button class="btn" onclick="testCmc()">Proxy testen</button>
+    <span class="stamp" id="cmcStatus" style="text-align:left">CMC: inaktiv</span>
+  </div>
+</div>
+
+<footer>
+  <div>Datenquellen: CoinGecko (Marktkap. &amp; Kennzahlen) · Hyperliquid (Live-Ticks &amp; OHLC) · CNBC Quote &amp; Charts (S&amp;P 500, Silber) · YTD-Basis: Schlusskurse 31.12.2025.</div>
+  <div style="margin-top:4px">Timeframes: 1 S · 1 Min · 5 Min · 15 Min · 30 Min · 1 Std · 1 T · 1 W · 1 Mon · 1 J · All — Verfügbarkeit je Asset-Klasse siehe Matrix oben.</div>
+  <div class="disc"><b>DISCLAIMER:</b> As an Devniqq Agent, I cannot provide legally protected, personalized investment advice.
+  This analysis is for informational purposes only and does not constitute investment advice or recommendations. Follow @devniqq on X
+  Consult a licensed financial advisor before making investment decisions.</div>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+
+/* ============ 1. ASSETS ============ */
+const ASSETS = [
+  {k:'BTC',   name:'Bitcoin',          cls:'krypto', cg:'bitcoin',            hl:'BTC',  ytdBase:87575.05},
+  {k:'ETH',   name:'Ethereum',         cls:'krypto', cg:'ethereum',           hl:'ETH',  ytdBase:2970.03},
+  {k:'XRP',   name:'XRP',              cls:'krypto', cg:'ripple',             hl:'XRP',  ytdBase:1.8405},
+  {k:'SOL',   name:'Solana',           cls:'krypto', cg:'solana',             hl:'SOL',  ytdBase:124.5211},
+  {k:'ZEC',   name:'Zcash',            cls:'krypto', cg:'zcash',              hl:'ZEC',  ytdBase:511.1265},
+  {k:'ICP',   name:'Internet Computer',cls:'krypto', cg:'internet-computer',  hl:'ICP',  ytdBase:2.8365},
+  {k:'SPX',   name:'S&P 500',          cls:'index',  cnbc:'.SPX',             ytdBase:6845.5},
+  {k:'ONDO',  name:'Ondo',             cls:'krypto', cg:'ondo-finance',       hl:'ONDO', ytdBase:0.3595},
+  {k:'NEAR',  name:'NEAR Protocol',    cls:'krypto', cg:'near',               hl:'NEAR', ytdBase:1.5125},
+  {k:'LINK',  name:'Chainlink',        cls:'krypto', cg:'chainlink',          hl:'LINK', ytdBase:12.1998},
+  {k:'SUI',   name:'Sui',              cls:'krypto', cg:'sui',                hl:'SUI',  ytdBase:1.4039},
+  {k:'SILVER',name:'Silber',           cls:'metal',  cnbc:'@SI.1',            ytdBase:70.603}
+];
+const BY = {}; ASSETS.forEach(a=>BY[a.k]=a);
+const CRYPTO = ASSETS.filter(a=>a.cls==='krypto');
+const HL_COINS = {}; CRYPTO.forEach(a=>HL_COINS[a.hl]=a.k);
+
+const TFS = [
+  {id:'1S',  lbl:'1 S',    sec:1},
+  {id:'1m',  lbl:'1 Min',  sec:60},
+  {id:'5m',  lbl:'5 Min',  sec:300},
+  {id:'15m', lbl:'15 Min', sec:900},
+  {id:'30m', lbl:'30 Min', sec:1800},
+  {id:'1h',  lbl:'1 Std',  sec:3600},
+  {id:'1d',  lbl:'1 T',    sec:86400},
+  {id:'1w',  lbl:'1 W',    sec:604800},
+  {id:'1M',  lbl:'1 Mon',  sec:2592000},
+  {id:'1y',  lbl:'1 J',    sec:31536000},
+  {id:'all', lbl:'All',    sec:86400}
+];
+
+/* ============ 2. STATE ============ */
+const state = {sel:'BTC', tf:'1d', cat:'all', q:'', sort:'mcap', dir:-1, tdir:-1, tkey:null, live:true, poll:5000};
+const D = {};
+ASSETS.forEach(a=>{
+  D[a.k]={price:null,ch24:null,ch7:null,ch30:null,ytd:null,mcap:null,vol:null,rank:null,
+          ath:null,athCh:null,circ:null,supply:null,src:'—',t:null,spark:[],hi52:null,lo52:null,mstatus:''};
+});
+const SRCSTATE = {
+  hlws:{label:'Hyperliquid WebSocket', state:'wait', note:'verbinde …'},
+  hl:  {label:'Hyperliquid REST',      state:'wait', note:'warte'},
+  cg:  {label:'CoinGecko',             state:'wait', note:'warte'},
+  cnbc:{label:'CNBC',                  state:'wait', note:'warte'},
+  cmc: {label:'CoinMarketCap',         state:'off',  note:'inaktiv'}
+};
+const liveBuf = {}; ASSETS.forEach(a=>liveBuf[a.k]=[]);
+let tickMark = [], tickRate = 0;
+
+/* ============ 3. FORMAT ============ */
+const $ = s=>document.querySelector(s);
+const nf = (v,d=2)=> (v==null||!isFinite(v)) ? '—' : Number(v).toLocaleString('de-DE',{minimumFractionDigits:d,maximumFractionDigits:d});
+function fmtP(v){
+  if(v==null||!isFinite(v)) return '—';
+  if(v>=10000) return nf(v,0);
+  if(v>=1000)  return nf(v,2);
+  if(v>=1)     return nf(v,3);
+  return nf(v,5);
+}
+function pct(v){ if(v==null||!isFinite(v)) return '—'; return (v>0?'+':'')+nf(v,2)+' %'; }
+function clsP(v){ return (v==null||!isFinite(v))?'flat':(v>0?'up':v<0?'dn':'flat'); }
+function mcapF(v){
+  if(v==null||!isFinite(v)||v<=0) return '—';
+  if(v>=1e12) return nf(v/1e12,2)+' Bio. $';
+  if(v>=1e9)  return nf(v/1e9,2)+' Mrd. $';
+  if(v>=1e6)  return nf(v/1e6,1)+' Mio. $';
+  return nf(v,0)+' $';
+}
+function timeF(ts){
+  if(!ts) return '—';
+  return new Date(ts).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+function esc(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+/* ============ 4. BADGES / KPI ============ */
+function renderBadges(){
+  const order=['hlws','hl','cg','cnbc','cmc'];
+  const el=$('#badges'); if(!el) return;
+  el.innerHTML = order.map(k=>{
+    const s=SRCSTATE[k];
+    const c = s.state==='ok'?'on': s.state==='wait'?'mid': s.state==='mid'?'mid': s.state==='err'?'err':'off';
+    const short={hlws:'WS',hl:'HL',cg:'CG',cnbc:'CNBC',cmc:'CMC'}[k];
+    return '<span class="badge '+c+'" title="'+esc(s.label+': '+s.note)+'"><span class="dot"></span>'+short+' · '+esc(s.note)+'</span>';
+  }).join('');
+}
+function src(k,st,note){ if(SRCSTATE[k]){SRCSTATE[k].state=st; SRCSTATE[k].note=note;} renderBadges(); }
+
+function renderKpis(){
+  let mcapSum=0, up=0, dn=0, best=null, worst=null;
+  ASSETS.forEach(a=>{
+    const d=D[a.k];
+    if(d.mcap) mcapSum+=d.mcap;
+    if(d.ch24!=null){ if(d.ch24>0) up++; else if(d.ch24<0) dn++; }
+    if(d.ytd!=null&&isFinite(d.ytd)){
+      if(!best||d.ytd>best.v) best={k:a.k,v:d.ytd};
+      if(!worst||d.ytd<worst.v) worst={k:a.k,v:d.ytd};
+    }
+  });
+  const items=[
+    {l:'Krypto-Marktkap. (10)', v:mcapF(mcapSum), s:'Summe aus CoinGecko'},
+    {l:'Assets im Plus (24 h)', v:up+' / '+ASSETS.length, s:dn+' im Minus'},
+    {l:'Bester YTD', v:best?best.k:'—', s:best?pct(best.v):'', c:best?clsP(best.v):''},
+    {l:'Schwächster YTD', v:worst?worst.k:'—', s:worst?pct(worst.v):'', c:worst?clsP(worst.v):''},
+    {l:'Live-Ticks / min', v:tickRate?nf(tickRate,0):'—', s:SRCSTATE.hlws.state==='ok'?'WebSocket aktiv':'kein Socket'}
+  ];
+  $('#kpis').innerHTML = items.map(i=>
+    '<div class="kpi"><div class="l">'+i.l+'</div><div class="v '+(i.c||'')+'">'+i.v+'</div><div class="s '+(i.c||'')+'">'+i.s+'</div></div>'
+  ).join('');
+}
+
+/* ============ 5. KARTEN ============ */
+function sortList(list){
+  const s=state.sort, d=state.dir;
+  const arr=list.slice();
+  arr.sort((x,y)=>{
+    const A=D[x.k], B=D[y.k];
+    let v=0;
+    if(s==='name') v=x.name.localeCompare(y.name,'de');
+    else if(s==='price') v=(A.price||0)-(B.price||0);
+    else if(s==='mcap') v=(A.mcap||0)-(B.mcap||0);
+    else {
+      const ka=s==='ytd'?'ytd':s;
+      const av=(A[ka]==null||!isFinite(A[ka]))?-1e9:A[ka];
+      const bv=(B[ka]==null||!isFinite(B[ka]))?-1e9:B[ka];
+      v=av-bv;
+    }
+    return v*d;
+  });
+  return arr;
+}
+function visible(){
+  return ASSETS.filter(a=>{
+    if(state.cat!=='all' && a.cls!==state.cat) return false;
+    if(state.q){
+      const q=state.q.toLowerCase();
+      if(!(a.name.toLowerCase().includes(q)||a.k.toLowerCase().includes(q))) return false;
+    }
+    return true;
+  });
+}
+function renderCards(){
+  const list=sortList(visible());
+  $('#cnt').textContent=list.length;
+  $('#grid').innerHTML = list.map(a=>{
+    const d=D[a.k];
+    return '<div class="card '+(state.sel===a.k?'act':'')+'" onclick="selectAsset(\''+a.k+'\')">'+
+      '<div class="ch"><div><div class="cn">'+esc(a.name)+'</div><div class="ck">'+a.k+' · '+
+        (a.cls==='krypto'?'Krypto':a.cls==='index'?'Index':'Edelmetall')+'</div></div>'+
+        '<div class="cb">'+(d.src==='—'?'—':esc(d.src))+'</div></div>'+
+      '<div class="cpr" id="p-'+a.k+'">'+(d.price!=null?fmtP(d.price):'—')+'</div>'+
+      '<div class="cc '+clsP(d.ch24)+'" id="c-'+a.k+'">'+(d.ch24!=null?pct(d.ch24)+' · 24 h':'wird geladen …')+'</div>'+
+      '<div class="spk"><canvas id="sp-'+a.k+'" width="240" height="38"></canvas></div>'+
+      '<div class="chips">'+
+        '<div class="chip"><div class="cl">1 W</div><div class="cv '+clsP(d.ch7)+'">'+pct(d.ch7)+'</div></div>'+
+        '<div class="chip"><div class="cl">1 Mon</div><div class="cv '+clsP(d.ch30)+'">'+pct(d.ch30)+'</div></div>'+
+        '<div class="chip"><div class="cl">YTD</div><div class="cv '+clsP(d.ytd)+'">'+pct(d.ytd)+'</div></div>'+
+      '</div>'+
+      '<div class="cf"><span>'+(d.mcap?mcapF(d.mcap):(a.cls==='index'?'Index — keine Marktkap.':'Spotpreis — keine Marktkap.'))+'</span>'+
+        '<span class="sm" id="t-'+a.k+'">'+(d.t?timeF(d.t):'—')+'</span></div>'+
+    '</div>';
+  }).join('') || '<div class="lead">Kein Asset passt zum Filter.</div>';
+  list.forEach(drawSpark);
+}
+function drawSpark(a){
+  const cv=document.getElementById('sp-'+a.k); if(!cv) return;
+  const ctx=cv.getContext('2d');
+  const dpr=window.devicePixelRatio||1;
+  const W=240,H=38;
+  cv.width=W*dpr; cv.height=H*dpr;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,W,H);
+  const vals=D[a.k].spark;
+  if(!vals||vals.length<2) return;
+  const mn=Math.min(...vals), mx=Math.max(...vals), rg=(mx-mn)||1;
+  const up = vals[vals.length-1]>=vals[0];
+  const col = up?'#22c55e':'#ef4444';
+  ctx.beginPath();
+  vals.forEach((v,i)=>{
+    const x=2+i*(236/(vals.length-1)), y=2+34*(1-(v-mn)/rg);
+    i?ctx.lineTo(x,y):ctx.moveTo(x,y);
+  });
+  ctx.strokeStyle=col; ctx.lineWidth=1.5; ctx.lineJoin='round'; ctx.lineCap='round'; ctx.stroke();
+  ctx.lineTo(238,38); ctx.lineTo(2,38); ctx.closePath();
+  const g=ctx.createLinearGradient(0,0,0,38);
+  g.addColorStop(0,up?'rgba(34,197,94,.30)':'rgba(239,68,68,.28)');
+  g.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=g; ctx.fill();
+}
+
+/* ============ 6. TABELLE ============ */
+function resLabel(a){ return a.cls==='krypto' ? '1 m · 1 s live' : '5 m · 5 s Poll'; }
+function renderTable(){
+  const list=sortList(visible());
+  if(state.tkey){
+    list.sort((x,y)=>{
+      const A=D[x.k],B=D[y.k];
+      let v=0;
+      if(state.tkey==='name') v=x.name.localeCompare(y.name,'de');
+      else if(state.tkey==='src') v=String(A.src).localeCompare(String(B.src));
+      else if(state.tkey==='res') v=resLabel(x).localeCompare(resLabel(y));
+      else {
+        const av=(A[state.tkey]==null||!isFinite(A[state.tkey]))?-1e9:A[state.tkey];
+        const bv=(B[state.tkey]==null||!isFinite(B[state.tkey]))?-1e9:B[state.tkey];
+        v=av-bv;
+      }
+      return v*state.tdir;
+    });
+  }
+  $('#tbody').innerHTML = list.map(a=>{
+    const d=D[a.k];
+    return '<tr onclick="selectAsset(\''+a.k+'\')" style="cursor:pointer">'+
+      '<td><div class="an"><div class="b">'+a.k.slice(0,4)+'</div><div><div class="nm">'+esc(a.name)+'</div><div class="sb">'+
+        (a.cls==='krypto'?'Krypto':a.cls==='index'?'Index':'Edelmetall')+'</div></div></div></td>'+
+      '<td id="tp-'+a.k+'">'+(d.price!=null?'$'+fmtP(d.price):'—')+'</td>'+
+      '<td id="tc-'+a.k+'" class="'+clsP(d.ch24)+'">'+pct(d.ch24)+'</td>'+
+      '<td class="'+clsP(d.ch7)+'">'+pct(d.ch7)+'</td>'+
+      '<td class="'+clsP(d.ch30)+'">'+pct(d.ch30)+'</td>'+
+      '<td class="'+clsP(d.ytd)+'">'+pct(d.ytd)+'</td>'+
+      '<td>'+(d.mcap?mcapF(d.mcap):'—')+'</td>'+
+      '<td style="color:var(--mut2);font-size:11.2px">'+resLabel(a)+'</td>'+
+      '<td style="color:var(--mut2);font-size:11.2px">'+esc(d.src)+'</td>'+
+    '</tr>';
+  }).join('');
+  document.querySelectorAll('#tbl thead th').forEach(th=>{
+    th.classList.toggle('sorted', th.dataset.k===state.tkey);
+  });
+}
+function setCat(c){
+  state.cat=c;
+  document.querySelectorAll('#catSeg button').forEach(b=>b.classList.toggle('act', b.dataset.cat===c));
+  renderCards(); renderTable();
+}
+function sortTable(k){
+  if(state.tkey===k) state.tdir*=-1;
+  else { state.tkey=k; state.tdir=-1; }
+  if(['name','price','ch24','ch7','ch30','ytd','mcap'].indexOf(k)>=0){
+    state.sort=k; state.dir=state.tdir;
+  }
+  renderTable();
+}
+document.querySelectorAll('#tbl thead th').forEach(th=>{
+  th.addEventListener('click',()=>sortTable(th.dataset.k));
+});
+
+/* ============ 7. FETCH-HELFER ============ */
+const CG_IDS = CRYPTO.map(a=>a.cg).join(',');
+const CG_URL = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids='+CG_IDS+
+  '&order=market_cap_desc&sparkline=true&price_change_percentage=24h,7d,30d';
+const CNBC_Q = 'https://quote.cnbc.com/quote-html-webservice/restQuote/symbolType/symbol?symbols=.SPX%7C%40SI.1'+
+  '&requestMethod=itv&noform=1&partnerId=2&fund=1&exthrs=1&output=json&events=1';
+const HL_INFO = 'https://api.hyperliquid.xyz/info';
+
+async function fetchCG(){
+  try{
+    const r = await fetch(CG_URL,{cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const arr = await r.json();
+    if(!Array.isArray(arr)) throw new Error('Format');
+    arr.forEach(c=>{
+      const a = CRYPTO.filter(x=>x.cg===c.id)[0]; if(!a) return;
+      const d = D[a.k];
+      d.mcap=c.market_cap; d.vol=c.total_volume; d.rank=c.market_cap_rank;
+      d.ath=c.ath; d.athCh=c.ath_change_percentage;
+      d.circ=c.circulating_supply; d.supply=c.max_supply;
+      if(c.price_change_percentage_7d_in_currency!=null) d.ch7=c.price_change_percentage_7d_in_currency;
+      if(c.price_change_percentage_30d_in_currency!=null) d.ch30=c.price_change_percentage_30d_in_currency;
+      if(c.price_change_percentage_24h!=null && d.ch24==null) d.ch24=c.price_change_percentage_24h;
+      if(d.price==null){ d.price=c.current_price; d.t=Date.now(); d.src='CG'; }
+      if(c.sparkline_in_7d && c.sparkline_in_7d.price && c.sparkline_in_7d.price.length){
+        d.spark=c.sparkline_in_7d.price.filter(v=>v!=null&&isFinite(v));
+      }
+    });
+    src('cg','ok',arr.length+' Assets');
+    renderKpis(); renderCards(); renderTable(); renderChartHead();
+  }catch(e){
+    src('cg','err','HTTP-Fehler');
+    console.warn('CoinGecko',e.message);
+  }
+}
+
+async function fetchCNBC(){
+  try{
+    const r = await fetch(CNBC_Q,{cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const j = await r.json();
+    const rows = (j && j.FormattedQuoteResult && j.FormattedQuoteResult.FormattedQuote) || [];
+    let n=0, status='';
+    rows.forEach(q=>{
+      const k = q.symbol==='.SPX'?'SPX':(q.symbol==='@SI.1'?'SILVER':null);
+      if(!k) return;
+      const d=D[k];
+      const p = parseFloat(String(q.last||'').replace(/,/g,''));
+      if(isFinite(p)&&p>0){ setPrice(k,p,'CNBC'); n++; }
+      if(typeof q.change_pct==='string' && q.change_pct!=='UNCH'){
+        const cp=parseFloat(q.change_pct.replace('%','').replace(',','.'));
+        if(isFinite(cp)) d.ch24=cp;
+      }
+      if(q.yrhiprice) d.hi52=parseFloat(String(q.yrhiprice).replace(/,/g,''));
+      if(q.yrloprice) d.lo52=parseFloat(String(q.yrloprice).replace(/,/g,''));
+      d.mstatus=q.curmktstatus||'';
+      status=q.curmktstatus||'';
+    });
+    src('cnbc','ok',n+' Quotes'+(status?' · '+status:''));
+    renderKpis();
+  }catch(e){
+    src('cnbc','err','HTTP-Fehler');
+    console.warn('CNBC',e.message);
+  }
+}
+
+async function hlCandles(coin, interval, startTime, endTime){
+  const body={type:'candleSnapshot',req:{coin:coin,interval:interval,startTime:startTime}};
+  if(endTime) body.req.endTime=endTime;
+  const r=await fetch(HL_INFO,{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(body),cache:'no-store'});
+  if(!r.ok) throw new Error('HL HTTP '+r.status);
+  const arr=await r.json();
+  if(!Array.isArray(arr)) throw new Error('HL Format');
+  return arr.map(b=>({t:+b.t,o:+b.o,h:+b.h,l:+b.l,c:+b.c,v:+b.v}));
+}
+
+const cnbcCache={};
+async function cnbcBars(symbol, period){
+  const key=symbol+'|'+period;
+  if(cnbcCache[key] && Date.now()-cnbcCache[key].at<45000) return cnbcCache[key].bars;
+  const url='https://ts-api.cnbc.com/harmony/app/charts/'+period+'.json?symbol='+encodeURIComponent(symbol);
+  const r=await fetch(url,{cache:'no-store'});
+  if(!r.ok) throw new Error('CNBC '+r.status);
+  const j=await r.json();
+  const src=(j && j.barData && j.barData.priceBars) || [];
+  const bars=src.map(b=>({t:+(b.tradeTimeinMills||0),c:+b.close,o:+b.open,h:+b.high,l:+b.low,v:+(b.volume||0)}))
+    .filter(b=>b.t>0&&isFinite(b.c)).sort((x,y)=>x.t-y.t);
+  cnbcCache[key]={at:Date.now(),bars:bars};
+  return bars;
+}
+
+/* ============ 8. WEBSOCKET ============ */
+let ws=null, wsOk=false, wsTries=0, wsTimer=null, restMidTimer=null;
+
+function wsConnect(){
+  if(!state.live) return;
+  try{ ws=new WebSocket('wss://api.hyperliquid.xyz/ws'); }
+  catch(e){ src('hlws','err','nicht verfügbar'); startRestMids(); return; }
+
+  ws.onopen=function(){
+    wsOk=true; wsTries=0;
+    src('hlws','ok','verbunden');
+    stopRestMids();
+    CRYPTO.forEach(a=>{ try{ ws.send(JSON.stringify({method:'subscribe',subscription:{type:'bbo',coin:a.hl}})); }catch(e){} });
+  };
+  ws.onmessage=function(ev){
+    let m; try{ m=JSON.parse(ev.data); }catch(e){ return; }
+    if(m.channel==='bbo' && m.data){
+      const bb=m.data.bbo;
+      if(!bb||!bb[0]||!bb[1]) return;
+      const bid=parseFloat(bb[0].px), ask=parseFloat(bb[1].px);
+      if(!isFinite(bid)||!isFinite(ask)) return;
+      onTick(m.data.coin,(bid+ask)/2,m.data.time||Date.now());
+    }
+  };
+  ws.onclose=function(){
+    wsOk=false;
+    src('hlws','mid','getrennt · REST-Fallback');
+    startRestMids();
+    if(state.live){
+      wsTries++;
+      const wait=Math.min(20000,1200*Math.pow(2,Math.min(wsTries,4)));
+      clearTimeout(wsTimer); wsTimer=setTimeout(wsConnect,wait);
+    }
+  };
+  ws.onerror=function(){ try{ ws.close(); }catch(e){} };
+}
+
+function startRestMids(){
+  if(restMidTimer) return;
+  restMidTimer=setInterval(async function(){
+    if(!state.live) return;
+    try{
+      const r=await fetch(HL_INFO,{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({type:'allMids'}),cache:'no-store'});
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      const mids=await r.json();
+      Object.keys(HL_COINS).forEach(function(c){
+        const p=parseFloat(mids[c]);
+        if(isFinite(p)&&p>0) onTick(c,p,Date.now());
+      });
+      src('hl','ok','allMids 1 s');
+    }catch(e){ src('hl','err','HTTP-Fehler'); }
+  },1000);
+}
+function stopRestMids(){ if(restMidTimer){ clearInterval(restMidTimer); restMidTimer=null; } }
+
+function onTick(coin, price, ts){
+  const k=HL_COINS[coin]; if(!k) return;
+  setPrice(k,price,'HL',ts);
+  tickMark.push(ts||Date.now());
+  if(tickMark.length>600) tickMark=tickMark.slice(-600);
+  const d=D[k];
+  if(d.ch24==null||d.ch7==null||d.ytd==null) computeFromSeries(k);
+  liveBuf[k].push({t:ts||Date.now(),p:price});
+  if(liveBuf[k].length>2000) liveBuf[k].shift();
+  if(state.sel===k) applyLive(price, ts||Date.now());
+  paintLiveOnly();
+}
+
+function setPrice(k, price, source, ts){
+  const d=D[k];
+  d.price=price; d.src=source; d.t=ts||Date.now();
+  const pe=document.getElementById('p-'+k); if(pe) pe.textContent=fmtP(price);
+  const te=document.getElementById('t-'+k); if(te) te.textContent=timeF(d.t);
+  const tpe=document.getElementById('tp-'+k); if(tpe) tpe.textContent='$'+fmtP(price);
+  const ce=document.getElementById('c-'+k);
+  if(ce && d.ch24!=null){ ce.textContent=pct(d.ch24)+' · 24 h'; ce.className='cc '+clsP(d.ch24); }
+  const tce=document.getElementById('tc-'+k);
+  if(tce){ tce.textContent=pct(d.ch24); tce.className=clsP(d.ch24); }
+  if(state.sel===k){
+    const cp=$('#cprice'), cc=$('#cchg');
+    if(cp) cp.textContent=fmtP(price);
+    if(cc){ cc.textContent=(d.ch24!=null?pct(d.ch24)+' (24 h)':''); cc.className='d '+clsP(d.ch24); }
+  }
+}
+
+let rafId=null;
+function paintLiveOnly(){
+  if(rafId) return;
+  rafId=requestAnimationFrame(function(){ rafId=null; paintChart(); });
+}
+
+/* ============ 9. KENNZAHLEN AUS SERIEN ============ */
+const seriesCache={};
+function refPct(bars, price, deltaMs, fallback){
+  if(!price||!bars||!bars.length) return fallback;
+  const target=Date.now()-deltaMs;
+  let best=null;
+  for(let i=bars.length-1;i>=0;i--){ if(bars[i].t<=target){ best=bars[i]; break; } }
+  if(!best) best=bars[0];
+  if(!best||!best.c) return fallback;
+  return (price/best.c-1)*100;
+}
+async function loadSeries(k){
+  const a=BY[k];
+  const d=D[k];
+  if(a.cls==='krypto'){
+    const l=d.price;
+    if(l&&a.ytdBase) d.ytd=(l/a.ytdBase-1)*100;
+    return;
+  }
+  try{
+    const bars=await cnbcBars(a.cnbc,'1M'); // 250 Tages-Bars ≈ 1 Jahr
+    if(!bars.length) return;
+    seriesCache[k]=bars;
+    const price=d.price||bars[bars.length-1].c;
+    d.ch7=refPct(bars,price,7*86400000,d.ch7);
+    d.ch30=refPct(bars,price,30*86400000,d.ch30);
+    if(d.ch24==null) d.ch24=refPct(bars,price,86400000,null);
+    if(a.ytdBase) d.ytd=(price/a.ytdBase-1)*100;
+    const yr=bars.filter(b=>b.t>Date.now()-365*86400000);
+    if(yr.length){ d.hi52=Math.max.apply(null,yr.map(b=>b.h||b.c)); d.lo52=Math.min.apply(null,yr.map(b=>b.l||b.c)); }
+    // Sparkline für Index/Edelmetall: letzte ~7 Tage aus der 5-Minuten-Reihe
+    if(!d.spark||d.spark.length<2){
+      try{
+        const intr=await cnbcBars(a.cnbc,'5D');
+        if(intr.length){
+          const cut=Date.now()-7*86400000;
+          let s=intr.filter(b=>b.t>=cut).map(b=>b.c);
+          if(s.length<2) s=intr.slice(-168).map(b=>b.c);
+          if(s.length>120){ const st=s.length/120, o=[]; for(let i=0;i<120;i++) o.push(s[Math.floor(i*st)]); o[119]=s[s.length-1]; s=o; }
+          if(s.length>=2) d.spark=s.filter(v=>v!=null&&isFinite(v));
+        }
+      }catch(e){ /* Sparkline optional */ }
+    }
+    renderCards(); renderTable(); renderChartHead();
+  }catch(e){ console.warn('series',k,e.message); }
+}
+function computeFromSeries(k){
+  const d=D[k], a=BY[k];
+  if(d.price&&a.ytdBase) d.ytd=(d.price/a.ytdBase-1)*100;
+  if(!d.price) return;
+  const b=seriesCache[k];
+  if(b&&b.length){
+    if(d.ch7==null) d.ch7=refPct(b,d.price,7*86400000,null);
+    if(d.ch30==null) d.ch30=refPct(b,d.price,30*86400000,null);
+  }
+}
+
+/* ============ 10. CHART-LADEN ============ */
+const CH={pts:[],src:'',note:'',res:'',loading:false,approx:false};
+
+function tfInfo(a,tf){
+  const isC=a.cls==='krypto';
+  if(isC){
+    if(tf==='1S') return {ok:true,approx:true,note:'Live-Mitschnitt aus WebSocket-Ticks (ab Seitenaufruf, keine Historie)'};
+    if(tf==='all') return {ok:true,approx:false,note:'Gesamte Hyperliquid-Historie ab Listung des Perp-Markts'};
+    return {ok:true,approx:false,note:''};
+  }
+  const map={
+    '1S': {ok:true,approx:true,note:'Keine Tick-Daten — Linie aus Quote-Polling'},
+    '1m': {ok:true,approx:true,note:'Keine 1-Minuten-Bars — 5-Minuten-Auflösung wird gezeigt'},
+    '5m': {ok:true,approx:false,note:''},
+    '15m':{ok:true,approx:true,note:'Aus 5-Minuten-Bars zu 15-Minuten-Buckets aggregiert'},
+    '30m':{ok:true,approx:true,note:'Aus 5-Minuten-Bars zu 30-Minuten-Buckets aggregiert'},
+    '1h': {ok:true,approx:true,note:'Aus 5-Minuten-Bars aggregiert — nur ~5 Handelstage Historie'},
+    '1d': {ok:true,approx:false,note:'Tagesreihe, letzte 180 Tage'},
+    '1w': {ok:true,approx:false,note:'CNBC 5D = eine Handelswoche in 5-Minuten-Bars'},
+    '1M': {ok:true,approx:false,note:'Letzte 30 Kalendertage aus der Tagesreihe'},
+    '1y': {ok:true,approx:false,note:'CNBC 1M = 250 Tages-Bars ≈ ein Jahr'},
+    'all':{ok:true,approx:false,note:'CNBC 5Y — Wochen-Bars ab 2016'}
+  };
+  return map[tf]||{ok:false,approx:false,note:'nicht verfügbar'};
+}
+function aggregate(bars,bucketSec){
+  if(!bars.length) return [];
+  const out=[]; let cur=null;
+  bars.forEach(b=>{
+    const bucket=Math.floor(b.t/1000/bucketSec)*bucketSec*1000;
+    if(!cur||cur.t!==bucket){ cur={t:bucket,c:b.c}; out.push(cur); }
+    else cur.c=b.c;
+  });
+  return out;
+}
+function downsample(pts,max){
+  if(pts.length<=max) return pts;
+  const step=pts.length/max, out=[];
+  for(let i=0;i<max;i++) out.push(pts[Math.floor(i*step)]);
+  out[out.length-1]=pts[pts.length-1];
+  return out;
+}
+function within(bars, days){
+  const cut=Date.now()-days*86400000;
+  const f=bars.filter(b=>b.t>=cut);
+  return f.length>2?f:bars.slice(-Math.min(bars.length,60));
+}
+
+let loadSeq=0;
+async function loadChart(){
+  const a=BY[state.sel], tf=state.tf;
+  const seq=++loadSeq;
+  CH.loading=true; hoverIdx=-1;
+  // lokal sammeln — erst am Ende wird committet, damit eine langsamere,
+  // ältere Anfrage eine neuere niemals überschreiben kann
+  let pts=null, res='', note='', approx=false, source='';
+  const commit=()=>{ CH.pts=pts; CH.res=res; CH.note=note; CH.approx=approx; CH.src=source; };
+  renderChartHead();
+  try{
+    if(a.cls==='krypto'){
+      source='Hyperliquid';
+      if(tf==='1S'){
+        pts=liveBuf[a.k].slice(-900).map(x=>({t:x.t,c:x.p}));
+        res='1 s (live)';
+        approx=true;
+        note='Live-Mitschnitt — wächst mit jedem Tick, keine rückwirkende Historie';
+      }else if(tf==='all'){
+        const bars=await hlCandles(a.hl,'1d',1600000000000,Date.now());
+        pts=downsample(bars.map(b=>({t:b.t,c:b.c})),1400);
+        res='1 T';
+        if(bars.length){
+          note='Historie ab '+new Date(bars[0].t).toLocaleDateString('de-DE',{month:'2-digit',year:'numeric'})+
+               ' · '+bars.length.toLocaleString('de-DE')+' Tages-Bars';
+        }
+      }else{
+        const imap={'1m':'1m','5m':'5m','15m':'15m','30m':'30m','1h':'1h','1d':'1d','1w':'1w','1M':'1M','1y':'1d'};
+        const iv=imap[tf]||'1d';
+        const dmap={'1m':1,'5m':3,'15m':7,'30m':14,'1h':30,'1d':180,'1w':420,'1M':1200,'1y':380};
+        const days=dmap[tf]||180;
+        const bars=await hlCandles(a.hl,iv,Date.now()-days*86400000,Date.now());
+        pts=downsample(bars.map(b=>({t:b.t,c:b.c})),1400);
+        res={'1m':'1 Min','5m':'5 Min','15m':'15 Min','30m':'30 Min','1h':'1 Std','1d':'1 T','1w':'1 W','1M':'1 Mon','1y':'1 T'}[tf]||'1 T';
+        if(!pts.length) throw new Error('keine Bars');
+      }
+    }else{
+      source='CNBC';
+      let period='5D', bucket=0, win=0;
+      if(tf==='1S'){
+        pts=liveBuf[a.k].slice(-900).map(x=>({t:x.t,c:x.p}));
+        res=state.poll<=5000?'5 s (Polling)':(state.poll/1000)+' s (Polling)';
+        approx=true;
+        note='Kein Tick-Feed — Linie entsteht aus dem Quote-Polling ab Seitenaufruf';
+      }else{
+        if(tf==='1m'){ period='5D'; res='5 Min (feinste Auflösung)'; approx=true; note='1-Minuten-Bars nicht verfügbar — 5-Minuten-Auflösung'; }
+        else if(tf==='5m'){ period='5D'; res='5 Min'; }
+        else if(tf==='15m'){ period='5D'; bucket=900; res='15 Min (aggregiert)'; approx=true; note='Aus 5-Minuten-Bars aggregiert'; }
+        else if(tf==='30m'){ period='5D'; bucket=1800; res='30 Min (aggregiert)'; approx=true; note='Aus 5-Minuten-Bars aggregiert'; }
+        else if(tf==='1h'){ period='5D'; bucket=3600; res='1 Std (aggregiert)'; approx=true; note='Aus 5-Minuten-Bars aggregiert — ~5 Handelstage'; }
+        else if(tf==='1d'){ period='1M'; win=180; res='1 T'; note='Tagesreihe, letzte 180 Tage'; }
+        else if(tf==='1w'){ period='5D'; res='5 Min (5 Tage)'; note='Eine Handelswoche in 5-Minuten-Bars'; }
+        else if(tf==='1M'){ period='1M'; win=30; res='1 T (30 Tage)'; note='Letzte 30 Kalendertage'; }
+        else if(tf==='1y'){ period='1M'; res='1 T'; note='250 Tages-Bars ≈ ein Jahr'; }
+        else { period='5Y'; res='1 W'; note='Wochen-Bars ab 2016'; }
+
+        let bars=await cnbcBars(a.cnbc,period);
+        if(!bars.length && period!=='5D'){ period='5D'; bars=await cnbcBars(a.cnbc,period); }
+        if(win) bars=within(bars,win);
+        if(bucket) bars=aggregate(bars,bucket);
+        pts=downsample(bars.map(b=>({t:b.t,c:b.c})),1400);
+        if(!pts.length) throw new Error('keine Bars');
+      }
+    }
+    if(seq!==loadSeq) return;   // veraltet — neuere Anfrage hat Vorrang
+    commit();
+    src(a.cls==='krypto'?'hl':'cnbc','ok','Chart geladen');
+  }catch(e){
+    if(seq!==loadSeq) return;
+    pts=[]; note='Quelle nicht erreichbar ('+e.message+')';
+    commit();
+    console.warn('chart',e.message);
+  }
+  CH.loading=false;
+  renderChartHead();
+  paintChart();
+}
+
+/* ============ 11. ZEICHNEN ============ */
+const cvEl=document.getElementById('cv');
+const tipEl=document.getElementById('tip');
+let hoverIdx=-1, geom=null;
+
+function fmtAxis(v){
+  if(v>=10000) return nf(v,0);
+  if(v>=100) return nf(v,1);
+  if(v>=1) return nf(v,2);
+  return nf(v,4);
+}
+function fmtTimeAxis(ts){
+  const d=new Date(ts), tf=state.tf;
+  if(tf==='1S'||tf==='1m'||tf==='5m'||tf==='15m'||tf==='30m'||tf==='1h'||tf==='1d'||tf==='1w')
+    return d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+  if(tf==='1M') return d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'});
+  return d.toLocaleDateString('de-DE',{month:'short',year:'2-digit'});
+}
+
+function paintChart(){
+  const pts=CH.pts||[];
+  const w=cvEl.clientWidth, h=cvEl.clientHeight;
+  if(!w||!h) return;
+  const dpr=window.devicePixelRatio||1;
+  cvEl.width=w*dpr; cvEl.height=h*dpr;
+  const ctx=cvEl.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,w,h);
+
+  if(pts.length<2){
+    ctx.fillStyle='#5d6f80';
+    ctx.font='13px -apple-system,Segoe UI,sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(CH.loading?'Lade Kursverlauf …':'Kein Verlauf verfügbar — Timeframe wechseln', w/2, h/2);
+    return;
+  }
+
+  const padL=8, padR=66, padT=14, padB=26;
+  const iw=w-padL-padR, ih=h-padT-padB;
+  let mn=Infinity,mx=-Infinity;
+  for(let i=0;i<pts.length;i++){ const v=pts[i].c; if(v<mn)mn=v; if(v>mx)mx=v; }
+  if(!isFinite(mn)||!isFinite(mx)) return;
+  const rg0=(mx-mn)||(mx*0.01)||1;
+  const lo=mn-rg0*0.12, hi=mx+rg0*0.12;
+  const X=i=>padL+(iw*i)/(pts.length-1);
+  const Y=v=>padT+ih*(1-(v-lo)/(hi-lo));
+  geom={padL:padL,padR:padR,padT:padT,padB:padB,iw:iw,ih:ih,w:w,h:h,lo:lo,hi:hi};
+
+  ctx.strokeStyle='#182534'; ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){
+    const y=padT+ih*i/4;
+    ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(w-padR,y); ctx.stroke();
+    ctx.fillStyle='#5d6f80';
+    ctx.font='10.5px -apple-system,Segoe UI,sans-serif';
+    ctx.textAlign='left'; ctx.textBaseline='middle';
+    ctx.fillText(fmtAxis(hi-(hi-lo)*i/4), w-padR+7, y);
+  }
+  const ticks=Math.min(6,Math.max(3,Math.floor(iw/120)));
+  ctx.textAlign='center'; ctx.textBaseline='top';
+  for(let i=0;i<=ticks;i++){
+    const idx=Math.round((pts.length-1)*i/ticks);
+    ctx.fillStyle='#5d6f80';
+    ctx.font='10.5px -apple-system,Segoe UI,sans-serif';
+    const lbl=fmtTimeAxis(pts[idx].t);
+    let x=X(idx);
+    if(i===0) ctx.textAlign='left';
+    else if(i===ticks) ctx.textAlign='right';
+    else ctx.textAlign='center';
+    ctx.fillText(lbl, Math.max(padL,Math.min(w-padR,x)), h-padB+6);
+  }
+
+  const up = pts[pts.length-1].c>=pts[0].c;
+  const col = up?'#22c55e':'#ef4444';
+
+  const grad=ctx.createLinearGradient(0,padT,0,h-padB);
+  grad.addColorStop(0, up?'rgba(34,197,94,.22)':'rgba(239,68,68,.20)');
+  grad.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.beginPath();
+  for(let i=0;i<pts.length;i++){ const x=X(i),y=Y(pts[i].c); i?ctx.lineTo(x,y):ctx.moveTo(x,y); }
+  ctx.lineTo(X(pts.length-1),h-padB); ctx.lineTo(X(0),h-padB); ctx.closePath();
+  ctx.fillStyle=grad; ctx.fill();
+
+  ctx.beginPath();
+  for(let i=0;i<pts.length;i++){ const x=X(i),y=Y(pts[i].c); i?ctx.lineTo(x,y):ctx.moveTo(x,y); }
+  ctx.strokeStyle=col; ctx.lineWidth=1.9; ctx.lineJoin='round'; ctx.lineCap='round'; ctx.stroke();
+
+  const lx=X(pts.length-1), ly=Y(pts[pts.length-1].c);
+  ctx.beginPath(); ctx.arc(lx,ly,3.4,0,Math.PI*2); ctx.fillStyle=col; ctx.fill();
+  ctx.setLineDash([3,4]); ctx.strokeStyle='rgba(45,212,191,.35)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(lx,padT); ctx.lineTo(lx,h-padB); ctx.stroke(); ctx.setLineDash([]);
+
+  if(hoverIdx>=0 && hoverIdx<pts.length){
+    const hx=X(hoverIdx), hy=Y(pts[hoverIdx].c);
+    ctx.setLineDash([2,3]); ctx.strokeStyle='#3a4d60'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(hx,padT); ctx.lineTo(hx,h-padB); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(padL,hy); ctx.lineTo(w-padR,hy); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.beginPath(); ctx.arc(hx,hy,3.6,0,Math.PI*2); ctx.fillStyle='#e9eff5'; ctx.fill();
+    ctx.beginPath(); ctx.arc(hx,hy,7.5,0,Math.PI*2); ctx.strokeStyle='rgba(233,239,245,.55)'; ctx.lineWidth=1; ctx.stroke();
+  }
+}
+
+cvEl.addEventListener('mousemove',function(e){
+  if(!geom||!CH.pts.length) return;
+  const r=cvEl.getBoundingClientRect();
+  const x=e.clientX-r.left, y=e.clientY-r.top;
+  let idx=Math.round((x-geom.padL)/geom.iw*(CH.pts.length-1));
+  idx=Math.max(0,Math.min(CH.pts.length-1,idx));
+  hoverIdx=idx;
+  const p=CH.pts[idx], d=new Date(p.t);
+  const intra=(state.tf==='1S'||state.tf==='1m'||state.tf==='5m'||state.tf==='15m'||state.tf==='30m'||state.tf==='1h');
+  const ds=intra
+    ? d.toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'})
+    : d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});
+  const chg=(p.c/CH.pts[0].c-1)*100;
+  tipEl.style.opacity='1';
+  tipEl.innerHTML='<div style="color:#8b9aa8;font-size:11px">'+ds+'</div>'+
+    '<b>'+fmtP(p.c)+' $</b>'+
+    '<div class="'+clsP(chg)+'" style="font-size:11.5px">'+pct(chg)+' seit Start</div>';
+  const tw=tipEl.offsetWidth||150;
+  let tx=x+16; if(tx+tw>geom.w-8) tx=x-tw-16;
+  tipEl.style.left=Math.max(4,tx)+'px';
+  tipEl.style.top=Math.max(4,y-12)+'px';
+  paintChart();
+});
+cvEl.addEventListener('mouseleave',function(){ hoverIdx=-1; tipEl.style.opacity='0'; paintChart(); });
+window.addEventListener('resize',function(){ paintChart(); });
+
+/* ============ 12. KOPF / NOTE / METRIKEN ============ */
+function renderChartHead(){
+  const a=BY[state.sel], d=D[a.k];
+  $('#cico').textContent=a.k.slice(0,4);
+  $('#cname').textContent=a.name;
+  $('#ctag').textContent = a.cls==='krypto'?'Krypto':a.cls==='index'?'Index':'Edelmetall';
+  $('#cprice').textContent = d.price!=null?fmtP(d.price):'—';
+  $('#cchg').textContent = d.ch24!=null?pct(d.ch24)+' (24 h)':'';
+  $('#cchg').className='d '+clsP(d.ch24);
+  $('#csrc').innerHTML='<div><span class="livepip"></span><b>'+CH.src+'</b> · '+(CH.res||'—')+'</div>'+
+    '<div>'+(d.t?('Tick: '+timeF(d.t)):'')+'</div>'+
+    '<div>'+(d.rank?('Rang #'+d.rank):(a.cls==='index'?'Index':'Spotpreis'))+'</div>';
+
+  $('#tfs').innerHTML=TFS.map(function(t){
+    const inf=tfInfo(a,t.id);
+    return '<button class="tf '+(state.tf===t.id?'act':'')+'" onclick="setTF(\''+t.id+'\')" title="'+
+      esc(inf.note||'nativ verfügbar')+'">'+t.lbl+(inf.approx?'<span class="ap">≈</span>':'')+'</button>';
+  }).join('');
+
+  const inf=tfInfo(a,state.tf);
+  const pills=[];
+  pills.push('<span class="pill '+(inf.approx?'a':'g')+'">'+(inf.approx?'≈ Näherung':'✅ nativ')+' · '+(CH.res||'—')+'</span>');
+  if(CH.src) pills.push('<span class="pill b">Quelle: '+esc(CH.src)+'</span>');
+  pills.push('<span>'+(CH.pts.length?CH.pts.length.toLocaleString('de-DE')+' Datenpunkte':'—')+'</span>');
+  if(CH.note) pills.push('<span>'+esc(CH.note)+'</span>');
+  $('#cnote').innerHTML=pills.join('');
+
+  const marr=[
+    ['Marktkap.', d.mcap?mcapF(d.mcap):'—',''],
+    ['24 h', pct(d.ch24), clsP(d.ch24)],
+    ['1 Woche', pct(d.ch7), clsP(d.ch7)],
+    ['1 Monat', pct(d.ch30), clsP(d.ch30)],
+    ['YTD', pct(d.ytd), clsP(d.ytd)],
+    ['Volumen 24 h', d.vol?mcapF(d.vol):'—',''],
+    ['52-W-Hoch', d.hi52?fmtP(d.hi52):'—',''],
+    ['52-W-Tief', d.lo52?fmtP(d.lo52):'—',''],
+    ['Abstand ATH', d.athCh!=null?pct(d.athCh):'—', d.athCh!=null?clsP(d.athCh):''],
+    ['Umlaufmenge', d.circ?nf(d.circ,0):'—',''],
+    ['Max. Menge', d.supply?nf(d.supply,0):'—',''],
+    ['Auflösung', CH.res||'—','']
+  ];
+  $('#mstrip').innerHTML=marr.map(function(m){
+    return '<div class="m"><div class="k">'+m[0]+'</div><div class="v '+(m[2]||'')+'">'+m[1]+'</div></div>';
+  }).join('');
+}
+function setTF(tf){ state.tf=tf; loadChart(); }
+function selectAsset(k){
+  state.sel=k;
+  renderCards();
+  renderChartHead();
+  loadChart();
+}
+
+/* ============ 13. LIVE-BRIDGE ============ */
+function applyLive(price, ts){
+  if(state.tf==='1S'){
+    if(!CH.pts) CH.pts=[];
+    CH.pts.push({t:ts,c:price});
+    const cutoff=ts-900000;
+    while(CH.pts.length && CH.pts[0].t<cutoff) CH.pts.shift();
+    return;
+  }
+  if(!CH.pts||!CH.pts.length) return;
+  const t=TFS.filter(x=>x.id===state.tf)[0];
+  const bucket=Math.max(1,t?t.sec:86400)*1000;
+  const b=Math.floor(ts/bucket)*bucket;
+  const last=CH.pts[CH.pts.length-1];
+  if(last.t===b) last.c=price;
+  else if(b>last.t){ CH.pts.push({t:b,c:price}); if(CH.pts.length>1600) CH.pts.shift(); }
+  else last.c=price;
+}
+
+/* ============ 14. TAKT ============ */
+let pollTimer=null, cgTimer=null, cdTimer=null, nextPoll=0;
+
+function setLive(on){
+  state.live=on;
+  if(on){
+    if(!wsOk) wsConnect();
+    startPoll();
+  }else{
+    if(ws){ try{ ws.close(); }catch(e){} }
+    stopRestMids(); stopPoll();
+    if(wsTimer) clearTimeout(wsTimer);
+    src('hlws','off','pausiert');
+  }
+}
+function setPoll(v){ state.poll=+v; if(state.tf==='1S'&&BY[state.sel].cls!=='krypto') loadChart(); startPoll(); }
+function startPoll(){
+  stopPoll();
+  if(!state.live) return;
+  nextPoll=Date.now()+state.poll;
+  pollTimer=setInterval(function(){
+    fetchCNBC();
+    nextPoll=Date.now()+state.poll;
+  },state.poll);
+}
+function stopPoll(){ if(pollTimer){ clearInterval(pollTimer); pollTimer=null; } }
+
+function paintClock(){
+  const s=Math.max(0,Math.round((nextPoll-Date.now())/1000));
+  const cd=$('#cd'); if(cd) cd.textContent=state.live?('REST-Takt in '+s+' s'):'pausiert';
+  const now=new Date();
+  const st=$('#stamp');
+  if(st) st.innerHTML='Letzte Aktualisierung: <b>'+now.toLocaleTimeString('de-DE')+'</b> · '+tickRate+' Ticks/min';
+}
+
+function refreshAll(manual){
+  if(!manual) return;
+  fetchCG(); fetchCNBC();
+  ASSETS.forEach(function(a){ loadSeries(a.k); });
+  loadChart();
+}
+
+/* ============ 15. CMC-PROXY (optional) ============ */
+let cmcProxy='';
+function setCmcProxy(v){
+  cmcProxy=(v||'').trim();
+  try{ localStorage.setItem('cmcProxy',cmcProxy); }catch(e){}
+  if(!cmcProxy){ src('cmc','off','inaktiv'); $('#cmcStatus').textContent='CMC: inaktiv'; }
+  else testCmc();
+}
+async function testCmc(){
+  if(!cmcProxy){ $('#cmcStatus').textContent='CMC: kein Proxy eingetragen'; return; }
+  $('#cmcStatus').textContent='CMC: teste …';
+  try{
+    const url=cmcProxy+(cmcProxy.indexOf('?')>=0?'&':'?')+'symbol=BTC&convert=USD';
+    const r=await fetch(url,{cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const j=await r.json();
+    let p=null;
+    if(j&&j.data&&j.data.BTC&&j.data.BTC.quote&&j.data.BTC.quote.USD) p=j.data.BTC.quote.USD.price;
+    else if(j&&j.data&&j.data.quote&&j.data.quote.USD) p=j.data.quote.USD.price;
+    if(p==null){ src('cmc','mid','Proxy antwortet'); $('#cmcStatus').textContent='CMC: erreichbar, Format unklar'; }
+    else { src('cmc','ok','Proxy aktiv'); $('#cmcStatus').textContent='CMC: aktiv — BTC '+fmtP(p)+' $'; }
+  }catch(e){
+    src('cmc','err','Proxy-Fehler');
+    $('#cmcStatus').textContent='CMC: Fehler — '+e.message;
+  }
+}
+
+/* ============ 16. INIT ============ */
+async function init(){
+  renderBadges(); renderKpis(); renderCards(); renderTable(); renderChartHead();
+
+  fetchCG();
+  fetchCNBC();
+
+  ASSETS.forEach(function(a){ loadSeries(a.k); });
+
+  wsConnect();
+  startPoll();
+
+  cgTimer=setInterval(fetchCG,60000);
+  setInterval(function(){ ASSETS.forEach(function(a){ loadSeries(a.k); }); },300000);
+
+  cdTimer=setInterval(function(){
+    paintClock();
+    const now=Date.now();
+    tickMark=tickMark.filter(function(t){ return now-t<60000; });
+    const prev=tickRate;
+    tickRate=tickMark.length;
+    if(Math.abs(tickRate-prev)>5) renderKpis();
+  },1000);
+
+  setTimeout(function(){
+    renderKpis(); renderCards(); renderTable(); renderChartHead();
+    loadChart();
+  },900);
+
+  try{
+    const saved=localStorage.getItem('cmcProxy')||'';
+    if(saved){ $('#cmcProxy').value=saved; setCmcProxy(saved); }
+  }catch(e){}
+
+  paintClock();
+}
+
+if(document.readyState==='complete'||document.readyState==='interactive') setTimeout(init,0);
+else window.addEventListener('load',init);
+</script>
+</body>
+</html>
